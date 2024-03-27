@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34202.233
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Tools", "Tools.shproj", "{05798E53-E2F5-4234-AD20-5532CA77A4FF}"
+EndProject
+Global
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2665E280-32C8-4324-B61A-6F6E8BC8464C}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Tools.projitems*{05798e53-e2f5-4234-ad20-5532ca77a4ff}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal
