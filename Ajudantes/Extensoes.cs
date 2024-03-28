@@ -261,7 +261,6 @@ namespace Tools.Ajudantes
 		}
 
 
-
 		public static String BackToString(this IEnumerable<char> _this)
 		{
 			return String.Concat(_this);
@@ -318,7 +317,7 @@ namespace Tools.Ajudantes
 		}
 
 		/// <summary>
-		/// Função ajudante que serve apenas para manter a sintaxe fluente. 
+		/// <p>Função ajudante que serve apenas para manter a sintaxe fluente. </p><br/>
 		/// <example>
 		///	Ao inves de escrever algo como
 		///	<code>
@@ -328,18 +327,23 @@ namespace Tools.Ajudantes
 		/// <code>
 		///		var res = 
 		///			a
-		///			.UsadoEm(pX => b.func1(pX, "param"))
+		///			.In(pX => b.func1(pX, "param"))
 		///			.ToString()
-		///			.UsadoEm(pX => func2(pX, 10));
+		///			.In(pX => func2(pX, 10));
 		/// </code>
 		/// em que fica claro a estrutura de processamento dos dados
 		/// </example>
 		/// </summary>
 		/// <returns></returns>
-		public static U In<T, U>(this T _this, Func<T, U> func) { return func(_this); }
-		public static T In<T>(this T _this, Action<T> func) { func(_this); return _this; }
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)] 
+		public static U In<T, U>(this T _this, Func<T, U> func) { return func(_this); }
+
+		/// <inheritdoc cref="In{T, U}(T, Func{T, U})"/> 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)] 
+		public static T In<T>(this T _this, Action<T> func) { func(_this); return _this; }
 		public static bool HasContent(this String _this) => !String.IsNullOrWhiteSpace(_this);
+		
 
 		public static IEnumerable<T> Chain<T>(this IEnumerable<T> _this, params IEnumerable<T>[] others)
 		{
@@ -349,12 +353,12 @@ namespace Tools.Ajudantes
 		public static IEnumerable<(T Atual, Possivel<T> Proximo)> ComPeek1<T>(this IEnumerable<T> _this)
 		{
 			var enumtor = _this.GetEnumerator();
-			var proximo = enumtor.MoveNext() ? Possivel.Algo(enumtor.Current) : Possivel.Nada<T>();
+			var proximo = enumtor.MoveNext() ? Possivel.Algo(enumtor.Current) : Possivel.Nada;
 
 			while (proximo.HaAlgo)
 			{
 				var atual = proximo.Valor;
-				proximo = enumtor.MoveNext() ? Possivel.Algo(enumtor.Current) : Possivel.Nada<T>();
+				proximo = enumtor.MoveNext() ? Possivel.Algo(enumtor.Current) : Possivel.Nada;
 				yield return (atual, proximo);
 			}
 		} 

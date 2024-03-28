@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using Tools.Ajudantes;
 
 namespace Tools.Tipos
 {
-
     public enum Lados { Esquerdo, Direito }
 
     public class Ou
     {
+
         public static Ou<T, U> EsquerdoOuDireito<T, U>(bool decider, Func<T> esquerdoGetter, Func<U> direitoGetter) => decider ? Ou<T, U>.Esquerdo(esquerdoGetter()) : Ou<T, U>.Direito(direitoGetter());
         public static Ou<T, U> Esquerdo<T, U>(T valor) => Ou<T, U>.Esquerdo(valor);
         public static Ou<T, U> Direito<T, U>(U valor) => Ou<T, U>.Direito(valor);
@@ -105,45 +104,55 @@ namespace Tools.Tipos
     /// </summary>
     public static class ExtensoesOu
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Possivel<T> PossivelValorEsquerdo<T, U>(this Ou<T, U> _this) => _this.Lado == Lados.Esquerdo ? _this.ValorEsquerdo : Possivel.Nada;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Possivel<U> PossivelValorDireito<T, U>(this Ou<T, U> _this) => _this.Lado == Lados.Direito ? _this.ValorDireito : Possivel.Nada;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Ou<U, T> Trocado<T, U>(this Ou<T, U> _this)
             => (_this.Lado == Lados.Esquerdo) ? Ou<U, T>.Direito(_this.ValorEsquerdo) : Ou<U, T>.Esquerdo(_this.ValorDireito);
 
         /// <summary>
-        /// A melhor forma de entender esse grande metodo é olhando para sua assinatura de tipo.
+        /// A melhor forma de entender esse grande metodo é olhando para sua assinatura de tipo. 
         /// </summary>
-        public static Func<T, Ou<TRes2, U>> ConectadaA<T, U, TRes1, TRes2>(this Func<T, Ou<TRes1, U>> _this, Func<TRes1, Ou<TRes2, U>> lFunc)
-            => (tX) => _this(tX).ConectadaA(lFunc);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<T, Ou<TRes2, U>> Bind<T, U, TRes1, TRes2>(this Func<T, Ou<TRes1, U>> _this, Func<TRes1, Ou<TRes2, U>> lFunc)
+            => (tX) => _this(tX).Bind(lFunc);
 
         /// <summary>
         /// Você tem um Ou chamado foo. Se ele for esquerdo, voce quer aplicar funcao lbar, e se for direito, voce não quer fazer nada. 
         /// Nesse caso, basta: 
-        ///  foo.ConectadaA(lbar, rbar)
+        ///  foo.Bind(lbar, rbar)
         /// </summary>
 
-        public static Ou<TRes, U> ConectadaA<T, U, TRes>(this Ou<T, U> _this, Func<T, Ou<TRes, U>> lFunc)
-            => _this.ConectadaA(lFunc, (pX) => (Ou<TRes, U>.Direito(pX)));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Ou<TRes, U> Bind<T, U, TRes>(this Ou<T, U> _this, Func<T, Ou<TRes, U>> lFunc)
+            => _this.Bind(lFunc, (pX) => (Ou<TRes, U>.Direito(pX)));
 
         /// <summary>
         /// Você tem um Ou chamado foo. Se ele for esquerdo, voce quer aplicar funcao lbar, e se for direito, voce quer aplicar a funcao rbar. 
         /// Nesse caso, basta: 
-        ///  foo.ConectadaA(lbar, rbar)
+        ///  foo.Bind(lbar, rbar)
         /// </summary>
-        public static Ou<TRes, URes> ConectadaA<T, U, TRes, URes>(this Ou<T, U> _this, Func<T, Ou<TRes, URes>> lFunc, Func<U, Ou<TRes, URes>> rFunc) =>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Ou<TRes, URes> Bind<T, U, TRes, URes>(this Ou<T, U> _this, Func<T, Ou<TRes, URes>> lFunc, Func<U, Ou<TRes, URes>> rFunc) =>
              _this.Lado == Lados.Esquerdo
                  ? lFunc(_this.ValorEsquerdo) : rFunc(_this.ValorDireito);
 
 
 
-        [MethodImpl(0x0100)]
-        public static Ou<TRes, U> ApliqueInternamente<T, U, TRes>(this Ou<T, U> _this, Func<T, TRes> func)
-            => _this.BiApliqueInternamente(func, (pX) => (pX));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Ou<TRes, U> Map<T, U, TRes>(this Ou<T, U> _this, Func<T, TRes> func)
+            => _this.BiMap(func, (pX) => (pX));
 
         [MethodImpl(0x0100)]
-        public static Ou<TRes, URes> BiApliqueInternamente<T, U, TRes, URes>(this Ou<T, U> _this, Func<T, TRes> lFunc, Func<U, URes> rFunc)
+        public static Ou<TRes, URes> BiMap<T, U, TRes, URes>(this Ou<T, U> _this, Func<T, TRes> lFunc, Func<U, URes> rFunc)
             => _this.Lado == Lados.Esquerdo ? Ou<TRes, URes>.Esquerdo(lFunc(_this.ValorEsquerdo)) : Ou<TRes, URes>.Direito(rFunc(_this.ValorDireito));
 
         [MethodImpl(0x0100)]
-        public static Ou<T, U> BiApliqueInternamente<T, U>(this Ou<T, U> _this, Action<T> lFunc, Action<U> rFunc)
+        public static Ou<T, U> BiMap<T, U>(this Ou<T, U> _this, Action<T> lFunc, Action<U> rFunc)
         {
             if (_this.Lado == Lados.Esquerdo) _this.ValorEsquerdo.In(lFunc);
             else _this.ValorDireito.In(rFunc);
@@ -151,7 +160,7 @@ namespace Tools.Tipos
         }
 
         [MethodImpl(0x0100)]
-        public static Ou<TRes, U> BiApliqueInternamente<T, TRes, U>(this Ou<T, U> _this, Func<T, TRes> lFunc, Action<U> rFunc)
+        public static Ou<TRes, U> BiMap<T, TRes, U>(this Ou<T, U> _this, Func<T, TRes> lFunc, Action<U> rFunc)
         {
             if (_this.Lado == Lados.Esquerdo)
                 return _this.ValorEsquerdo.In(lFunc).In(Ou<TRes, U>.Esquerdo);
@@ -161,7 +170,7 @@ namespace Tools.Tipos
         }
 
         [MethodImpl(0x0100)]
-        public static Ou<T, URes> BiApliqueInternamente<T, U, URes>(this Ou<T, U> _this, Action<T> lFunc, Func<U, URes> rFunc)
+        public static Ou<T, URes> BiMap<T, U, URes>(this Ou<T, U> _this, Action<T> lFunc, Func<U, URes> rFunc)
         {
             if (_this.Lado == Lados.Esquerdo)
                 return _this.ValorEsquerdo.In(lFunc).In(Ou<T, URes>.Esquerdo);
@@ -170,9 +179,30 @@ namespace Tools.Tipos
                 return _this.ValorDireito.In(rFunc).In(Ou<T, URes>.Direito);
         }
 
-
-
         public static T Join<T>(this Ou<T, T> _this) => (T)_this.valor;
+    }
+    public static class ExtensoesOuEnumeraveis
+    {
+       public static IEnumerable<TVal> Flatten<TVal, TInnerEnumerable>(this IEnumerable<Ou<TVal, TInnerEnumerable>> _this) 
+            where TInnerEnumerable: IEnumerable<TVal>
+       {
+            foreach (var elem in _this)
+            {
+                switch (elem.Lado)
+                {
+                    case Lados.Esquerdo:
+                        yield return elem.ValorEsquerdo;
+                        break;
+                    case Lados.Direito:
+                        foreach (var innerElem in elem.ValorDireito)
+                            yield return innerElem;
+                        break;
+                }
+            }
+       }
+        public static IEnumerable<TVal> Flatten<TVal, TInnerEnumerable>(this IEnumerable<Ou<TInnerEnumerable, TVal>> _this)
+            where TInnerEnumerable : IEnumerable<TVal> => _this.Select(pX => pX.Trocado()).Flatten();
+       
     }
 
 }

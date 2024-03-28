@@ -14,8 +14,11 @@ namespace Tools.Tipos
         public static Possivel<T> AlgoSe<T>(bool Se, T valor) => Se ? Possivel<T>.Algo(valor) : Possivel<T>.Nada();
         public static Possivel<T> AlgoSe<T>(bool Se, Func<T> valor) => Se ? Possivel<T>.Algo(valor()) : Possivel<T>.Nada();
         public static Possivel<T> Algo<T>(T valor) => Possivel<T>.Algo(valor);
-        public static Possivel<T> Nada<T>() => Possivel<T>.Nada();
+        public static PossivelNadaElement Nada = new PossivelNadaElement();
     }
+
+    public struct PossivelNadaElement{}
+
 
     [DataContract]
     public struct Possivel<T> : IEquatable<Possivel<T>>
@@ -34,6 +37,9 @@ namespace Tools.Tipos
 
         #region Conversores
         public static implicit operator Possivel<T>(T val) => ((object)val == null) ? Possivel<T>.Nada() : Possivel<T>.Algo(val);
+
+        public static implicit operator Possivel<T>(PossivelNadaElement nadaElement) => Possivel<T>.Nada();
+
         #endregion
 
         #region Valores internos
@@ -89,14 +95,16 @@ namespace Tools.Tipos
         }
         [MethodImpl(0x100)] public static Possivel<T> Valide<T>(this Possivel<T> _this, bool guard) => guard ? _this : Possivel<T>.Nada();
 
-        [MethodImpl(0x100)] public static Possivel<T> Join<T>(this Possivel<Possivel<T>> _this) => _this.HaAlgo && _this.Valor.HaAlgo ? Possivel.Algo<T>(_this.Valor.Valor) : Possivel.Nada<T>();
-        [MethodImpl(0x100)] public static Possivel<T> Join<T>(this Possivel<T> _this) where T : class => _this.HaAlgo && _this.Valor != null ? Possivel<T>.Algo(_this.Valor) : Possivel<T>.Nada();
+        [MethodImpl(0x100)] public static Possivel<T> Join<T>(this Possivel<Possivel<T>> _this) => _this.HaAlgo && _this.Valor.HaAlgo ? Possivel.Algo<T>(_this.Valor.Valor) : Possivel.Nada;
+        [MethodImpl(0x100)] public static Possivel<T> Join<T>(this Possivel<T> _this) where T : class => _this.HaAlgo && _this.Valor != null ? Possivel<T>.Algo(_this.Valor) : Possivel.Nada;
 
         [MethodImpl(0x100)] public static Possivel<T> AsPossivel<T>(this T _this) where T : class => _this != null ? Possivel<T>.Algo(_this) : Possivel<T>.Nada();
 
         [MethodImpl(0x100)] public static T ValorSeHouver<T>(this Possivel<T> _this) where T : class => _this.HaAlgo ? _this.Valor : null;
 
         [MethodImpl(0x100)] public static Possivel<T> Coalesce<T>(this Possivel<T> _this, Func<Possivel<T>> otherFunc) => _this.HaAlgo ? _this : otherFunc();
+
+        [MethodImpl(0x100)] public static T Coalesce<T>(this Possivel<T> _this, Func<T> otherFunc) => _this.HaAlgo ? _this.Valor : otherFunc();
         [MethodImpl(0x100)] public static Possivel<T> Coalesce<T>(this Possivel<T> _this, Possivel<T> other) => _this.HaAlgo ? _this : other;
         [MethodImpl(0x100)] public static T Coalesce<T>(this Possivel<T> _this, T other) => _this.HaAlgo ? _this.Valor : other;
         [MethodImpl(0x100)] public static Possivel<U> Bind<T, U>(this Possivel<T> _this, Func<T, Possivel<U>> bunc) => _this.HaAlgo ? _this.Valor.In(bunc) : Possivel<U>.Nada();
@@ -123,7 +131,7 @@ namespace Tools.Tipos
             => possiveis.Where(pX => getPossivelFunc(pX).HaAlgo).Select(pX => pX);
 
         [MethodImpl(0x100)]
-        public static Possivel<TVal> TryGet<TKey, TVal>(this IDictionary<TKey, TVal> _this, TKey chave) => _this.ContainsKey(chave) ? Possivel.Algo(_this[chave]) : Possivel.Nada<TVal>();
+        public static Possivel<TVal> TryGet<TKey, TVal>(this IDictionary<TKey, TVal> _this, TKey chave) => _this.ContainsKey(chave) ? Possivel.Algo(_this[chave]) : Possivel.Nada;
 
     }
     public static class WeakReferencePossivelExtensoes
@@ -133,7 +141,7 @@ namespace Tools.Tipos
             if (_this.TryGetTarget(out var alvo))
                 return Possivel.Algo(alvo);
             else 
-                return Possivel.Nada<T>();
+                return Possivel.Nada;
         }
     }
 
