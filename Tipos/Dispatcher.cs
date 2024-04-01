@@ -6,8 +6,15 @@ using Tools.Ajudantes;
 namespace Tools.Tipos {
     public static class Dispatcher
     {
-        public static DynDispatcher<TIn, TOut> MakeFromFunc<TIn, TOut>(Func<TIn, Possivel<TOut>> func) 
+        public static DynDispatcher<TIn, TOut> MakeDispatcherFromFunc<TIn, TOut>(Func<TIn, Possivel<TOut>> func) 
                 => new DynDispatcher<TIn, TOut>(func);
+        public static IDispatcher<TIn, TOut> MakeAlwaysDispatcher<TIn, TOut>(Func<TIn, TOut> func) 
+            => MakeFromFunc<TIn, TOut>(pX => Possivel.Algo(func(pX)));
+        public static IDispatcher<TIn, TOut> MakeAlwaysDispatcher<TIn, TOut>(TOut res) 
+            => MakeFromFunc<TIn, TOut>(pX => Possivel.Algo(res));
+        public static IDispatcher<TIn, TOut> MakeIdentityDispatcher
+
+
         public static DictDispatcher<IDictionary<TIn, TOut>, TIn, TOut> MakeFromDict< TIn, TOut>(IDictionary<TIn, TOut> dispatcherDict)
             => new DictDispatcher<IDictionary<TIn, TOut>, TIn, TOut> { DispatchDict = dispatcherDict };
 
@@ -16,7 +23,8 @@ namespace Tools.Tipos {
         public static IDispatcher<TIn, TOut1> ComposeOutput<TIn, TOut0, TOut1>(this IDispatcher<TIn, TOut0> _this, Func<TOut0, TOut1> outputComposer)
             => new DynDispatcher<TIn, TOut1>(pX => _this.TryDispatch(pX).Map(outputComposer));
 
-        public static IDispatcher<(TIn0, TIn1), TOut> Collapse<TIn0, TIn1, TOut>(this IDispatcher<TIn0, Func<TIn1, TOut>> _this)
+
+        public static IDispatcher<(TIn0, TIn1), TOut> Flatten<TIn0, TIn1, TOut>(this IDispatcher<TIn0, Func<TIn1, TOut>> _this)
             => MakeFromFunc(
                 ((TIn0 in_0, TIn1 in_1) res) => _this.TryDispatch(res.in_0).Map(func => func(res.in_1))
             );
@@ -59,7 +67,7 @@ namespace Tools.Tipos {
 
         public override Possivel<TOut> TryDispatch(TIn input)
         {
-            Possivel<TOut> res = Possivel.Nada<TOut>();
+            Possivel<TOut> res = Possivel.Nada;
             foreach (var despachante in this.Dispatchers)
             {
                 res = res.Coalesce(despachante.TryDispatch(input));

@@ -350,6 +350,8 @@ namespace Tools.Ajudantes
 			return _this.Chain(( IEnumerable<IEnumerable<T>> )others);
 		}
 
+
+
 		public static IEnumerable<(T Atual, Possivel<T> Proximo)> ComPeek1<T>(this IEnumerable<T> _this)
 		{
 			var enumtor = _this.GetEnumerator();

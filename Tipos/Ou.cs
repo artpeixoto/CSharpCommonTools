@@ -145,14 +145,15 @@ namespace Tools.Tipos
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Ou<TRes, U> Map<T, U, TRes>(this Ou<T, U> _this, Func<T, TRes> func)
-            => _this.BiMap(func, (pX) => (pX));
+            => _this.Map(func, (pX) => (pX));
+
 
         [MethodImpl(0x0100)]
-        public static Ou<TRes, URes> BiMap<T, U, TRes, URes>(this Ou<T, U> _this, Func<T, TRes> lFunc, Func<U, URes> rFunc)
+        public static Ou<TRes, URes> Map<T, U, TRes, URes>(this Ou<T, U> _this, Func<T, TRes> lFunc, Func<U, URes> rFunc)
             => _this.Lado == Lados.Esquerdo ? Ou<TRes, URes>.Esquerdo(lFunc(_this.ValorEsquerdo)) : Ou<TRes, URes>.Direito(rFunc(_this.ValorDireito));
 
         [MethodImpl(0x0100)]
-        public static Ou<T, U> BiMap<T, U>(this Ou<T, U> _this, Action<T> lFunc, Action<U> rFunc)
+        public static Ou<T, U> Map<T, U>(this Ou<T, U> _this, Action<T> lFunc, Action<U> rFunc)
         {
             if (_this.Lado == Lados.Esquerdo) _this.ValorEsquerdo.In(lFunc);
             else _this.ValorDireito.In(rFunc);
@@ -160,7 +161,7 @@ namespace Tools.Tipos
         }
 
         [MethodImpl(0x0100)]
-        public static Ou<TRes, U> BiMap<T, TRes, U>(this Ou<T, U> _this, Func<T, TRes> lFunc, Action<U> rFunc)
+        public static Ou<TRes, U> Map<T, TRes, U>(this Ou<T, U> _this, Func<T, TRes> lFunc, Action<U> rFunc)
         {
             if (_this.Lado == Lados.Esquerdo)
                 return _this.ValorEsquerdo.In(lFunc).In(Ou<TRes, U>.Esquerdo);
@@ -170,7 +171,7 @@ namespace Tools.Tipos
         }
 
         [MethodImpl(0x0100)]
-        public static Ou<T, URes> BiMap<T, U, URes>(this Ou<T, U> _this, Action<T> lFunc, Func<U, URes> rFunc)
+        public static Ou<T, URes> Map<T, U, URes>(this Ou<T, U> _this, Action<T> lFunc, Func<U, URes> rFunc)
         {
             if (_this.Lado == Lados.Esquerdo)
                 return _this.ValorEsquerdo.In(lFunc).In(Ou<T, URes>.Esquerdo);
@@ -183,9 +184,9 @@ namespace Tools.Tipos
     }
     public static class ExtensoesOuEnumeraveis
     {
-       public static IEnumerable<TVal> Flatten<TVal, TInnerEnumerable>(this IEnumerable<Ou<TVal, TInnerEnumerable>> _this) 
+        public static IEnumerable<TVal> Flatten<TVal, TInnerEnumerable>(this IEnumerable<Ou<TVal, TInnerEnumerable>> _this) 
             where TInnerEnumerable: IEnumerable<TVal>
-       {
+        {
             foreach (var elem in _this)
             {
                 switch (elem.Lado)
@@ -199,10 +200,39 @@ namespace Tools.Tipos
                         break;
                 }
             }
-       }
+        }
         public static IEnumerable<TVal> Flatten<TVal, TInnerEnumerable>(this IEnumerable<Ou<TInnerEnumerable, TVal>> _this)
             where TInnerEnumerable : IEnumerable<TVal> => _this.Select(pX => pX.Trocado()).Flatten();
-       
-    }
 
+        public static IEnumerable<Ou<TVal, Exception>> CatchingErrors<TVal>(this IEnumerable<TVal> _this)
+        {
+            var enumtor = _this.GetEnumerator();
+            var terminou = false;
+            while(!terminou)
+            {
+                Ou<TVal, Possivel<Exception>> resultadoAtual;
+                try
+                {
+                    if (enumtor.MoveNext())
+                        resultadoAtual = Ou.Esquerdo(enumtor.Current);
+                    else
+                        resultadoAtual = Ou.Direito(Possivel<Exception>.Nada());
+                }
+                catch(Exception ex)
+                {
+                    resultadoAtual = Ou.Direito(Possivel.Algo(ex));
+                }
+                if (resultadoAtual.Lado == Lados.Esquerdo)
+                {
+                    yield return Ou.Esquerdo(resultadoAtual.ValorEsquerdo);
+                }
+                else
+                {
+                    terminou = true;
+                    if (resultadoAtual.ValorDireito.HaAlgo)
+                        yield return Ou.Direito(resultadoAtual.ValorDireito.Valor);
+                }
+            } 
+        } 
+    }
 }

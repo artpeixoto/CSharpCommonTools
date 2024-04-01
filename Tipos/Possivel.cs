@@ -91,11 +91,13 @@ namespace Tools.Tipos
 
         {
             var res = _this.Map(guardFunc).Coalesce(false);
-            return _this.Valide(res);
+            return _this.Guard(res);
         }
-        [MethodImpl(0x100)] public static Possivel<T> Valide<T>(this Possivel<T> _this, bool guard) => guard ? _this : Possivel<T>.Nada();
+        [MethodImpl(0x100)] public static Possivel<T> Guard<T>(this Possivel<T> _this, bool guard) => guard ? _this : Possivel<T>.Nada();
 
-        [MethodImpl(0x100)] public static Possivel<T> Join<T>(this Possivel<Possivel<T>> _this) => _this.HaAlgo && _this.Valor.HaAlgo ? Possivel.Algo<T>(_this.Valor.Valor) : Possivel.Nada;
+        [MethodImpl(0x100)] public static Unit Throw<TExc>(this Possivel<TExc> _this) where TExc : Exception => _this.HaAlgo ? throw _this.Valor : Unit.Element;
+
+        [ MethodImpl(0x100) ] public static Possivel<T> Join<T>(this Possivel<Possivel<T>> _this) => _this.HaAlgo && _this.Valor.HaAlgo ? Possivel.Algo<T>(_this.Valor.Valor) : Possivel.Nada;
         [MethodImpl(0x100)] public static Possivel<T> Join<T>(this Possivel<T> _this) where T : class => _this.HaAlgo && _this.Valor != null ? Possivel<T>.Algo(_this.Valor) : Possivel.Nada;
 
         [MethodImpl(0x100)] public static Possivel<T> AsPossivel<T>(this T _this) where T : class => _this != null ? Possivel<T>.Algo(_this) : Possivel<T>.Nada();
